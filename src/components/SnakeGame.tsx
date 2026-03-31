@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Point, Direction } from '../types';
 import { GRID_SIZE, INITIAL_SNAKE, INITIAL_DIRECTION, GAME_SPEED } from '../constants';
-import { Terminal, RefreshCcw, Power } from 'lucide-react';
+import { Activity, RefreshCw, Cpu } from 'lucide-react';
 
 export default function SnakeGame() {
   const [snake, setSnake] = useState<Point[]>(INITIAL_SNAKE);
@@ -14,6 +14,13 @@ export default function SnakeGame() {
   const [highScore, setHighScore] = useState(0);
   
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [isFlashing, setIsFlashing] = useState(false);
+
+  const triggerFlash = () => {
+    setIsFlashing(true);
+    setTimeout(() => setIsFlashing(false), 150);
+  };
 
   const generateFood = useCallback(() => {
     let newFood;
@@ -67,6 +74,7 @@ export default function SnakeGame() {
       if (newHead.x === food.x && newHead.y === food.y) {
         setScore(s => s + 10);
         setFood(generateFood());
+        triggerFlash();
       } else {
         newSnake.pop();
       }
@@ -101,21 +109,34 @@ export default function SnakeGame() {
   }, [isStarted, isGameOver, moveSnake]);
 
   return (
-    <div className="flex flex-col items-center gap-6 font-mono">
-      <div className="flex gap-4 items-center bg-black border border-[#00ffff]/30 px-6 py-2 shadow-[2px_2px_0px_#ff00ff]">
-        <div className="flex items-center gap-2">
-          <Terminal size={14} className="text-[#ff00ff]" />
-          <span className="text-[#00ffff] text-lg tracking-tighter">DATA_POINTS: {score}</span>
+    <div className="flex flex-col items-center gap-8 font-sans">
+      <div className="flex gap-12 items-center bg-neutral-900/60 border border-white/10 px-8 py-4 cyber-clip backdrop-blur-md">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Current Score</span>
+          <div className="flex items-center gap-3">
+            <Activity size={16} className="text-[#00f0ff]" />
+            <span className="text-[#00f0ff] font-display text-2xl font-bold tracking-tighter drop-shadow-[0_0_8px_#00f0ff]">{score}</span>
+          </div>
         </div>
-        <div className="w-[1px] h-4 bg-[#00ffff]/20" />
-        <div className="text-[#ff00ff]/50 text-[10px] uppercase">
-          MAX_BUFFER: {highScore}
+        <div className="w-px h-10 bg-white/10" />
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-widest text-neutral-500 mb-1">High Score</span>
+          <div className="flex items-center gap-3">
+            <Cpu size={16} className="text-[#ff003c]" />
+            <span className="text-[#ff003c] font-display text-2xl font-bold tracking-tighter drop-shadow-[0_0_8px_#ff003c]">{highScore}</span>
+          </div>
         </div>
       </div>
 
-      <div className="relative">
+      <motion.div 
+        animate={isFlashing ? { scale: [1, 1.02, 1], filter: ["brightness(1)", "brightness(1.5)", "brightness(1)"] } : {}}
+        className="relative group"
+      >
+        {/* Animated Border */}
+        <div className="absolute -inset-0.5 bg-gradient-to-r from-[#00f0ff] via-[#ff003c] to-[#fcee0a] rounded-none blur opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+        
         <div 
-          className="relative bg-black border-2 border-[#00ffff] shadow-[8px_8px_0px_#ff00ff]"
+          className="relative bg-black border border-white/10 overflow-hidden"
           style={{ 
             width: GRID_SIZE * 20, 
             height: GRID_SIZE * 20,
@@ -124,24 +145,39 @@ export default function SnakeGame() {
             gridTemplateRows: `repeat(${GRID_SIZE}, 1fr)`
           }}
         >
+          {/* Grid Background */}
+          <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
+
+          {/* Scanline Overlay */}
+          <div className="absolute inset-0 pointer-events-none z-30 opacity-[0.03]" 
+               style={{ background: 'linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06))', backgroundSize: '100% 4px, 3px 100%' }} />
+
           {/* Snake */}
           {snake.map((segment, i) => (
-            <div
+            <motion.div
               key={`${i}-${segment.x}-${segment.y}`}
-              className="absolute w-5 h-5 p-[1px]"
-              style={{ left: segment.x * 20, top: segment.y * 20 }}
+              initial={false}
+              animate={{ x: segment.x * 20, y: segment.y * 20 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="absolute w-5 h-5 p-0.5"
             >
-              <div className={`w-full h-full ${i === 0 ? 'bg-[#00ffff]' : 'bg-[#00ffff]/40'} border border-black`} />
-            </div>
+              <div className={`w-full h-full ${i === 0 ? 'bg-[#00f0ff] neon-blue' : 'bg-[#00f0ff]/40 border border-[#00f0ff]/20'}`} />
+            </motion.div>
           ))}
 
           {/* Food */}
-          <div
-            className="absolute w-5 h-5 p-1 animate-pulse"
+          <motion.div
+            animate={{ 
+              scale: [1, 1.3, 1], 
+              rotate: [0, 90, 180, 270, 360],
+              boxShadow: ["0 0 10px #fcee0a", "0 0 20px #fcee0a", "0 0 10px #fcee0a"]
+            }}
+            transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+            className="absolute w-5 h-5 p-1"
             style={{ left: food.x * 20, top: food.y * 20 }}
           >
-            <div className="w-full h-full bg-[#ff00ff] shadow-[0_0_10px_#ff00ff]" />
-          </div>
+            <div className="w-full h-full bg-[#fcee0a] rotate-45" />
+          </motion.div>
 
           {/* Overlays */}
           <AnimatePresence>
@@ -150,42 +186,46 @@ export default function SnakeGame() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-10 p-8 text-center"
+                className="absolute inset-0 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center z-10 p-8 text-center"
               >
-                <h2 className="text-3xl font-black text-[#00ffff] mb-2 glitch uppercase tracking-tighter">INIT_SNAKE_CORE</h2>
-                <p className="text-[#ff00ff] text-[10px] mb-8 tracking-widest">ENCRYPTION_KEY: REQUIRED</p>
+                <h2 className="text-4xl font-black text-white font-display mb-2 tracking-tighter uppercase italic">
+                  <span className="text-[#00f0ff]">NEO</span>STRIKE
+                </h2>
+                <p className="text-neutral-500 text-[10px] mb-10 tracking-[0.4em] uppercase">Neural Interface Ready</p>
                 <button 
                   onClick={resetGame}
-                  className="group flex items-center gap-3 bg-[#00ffff] text-black px-8 py-3 font-black text-sm hover:bg-[#ff00ff] transition-all shadow-[4px_4px_0px_#ff00ff] active:translate-x-1 active:translate-y-1 active:shadow-none"
+                  className="group relative bg-[#00f0ff] text-black px-10 py-4 font-display font-black text-sm uppercase tracking-widest cyber-clip hover:bg-[#fcee0a] transition-all shadow-[0_0_30px_rgba(0,240,255,0.4)] active:scale-95"
                 >
-                  <Power size={18} />
-                  BOOT_SYSTEM
+                  Connect Link
                 </button>
               </motion.div>
             )}
 
             {isGameOver && (
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-[#ff00ff]/10 backdrop-blur-sm flex flex-col items-center justify-center z-20 p-8 text-center"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="absolute inset-0 bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center z-20 p-8 text-center"
               >
-                <div className="bg-black border-2 border-red-600 p-8 shadow-[8px_8px_0px_#000]">
-                  <h2 className="text-4xl font-black text-red-600 mb-2 italic glitch uppercase">CORE_CRITICAL</h2>
-                  <p className="text-white text-xs mb-8 font-mono">MEMORY_DUMP: {score}_BYTES_LOST</p>
-                  <button 
-                    onClick={resetGame}
-                    className="flex items-center gap-3 bg-red-600 text-white px-8 py-3 font-black text-sm hover:bg-white hover:text-black transition-all shadow-[4px_4px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none"
-                  >
-                    <RefreshCcw size={18} />
-                    REBOOT_CORE
-                  </button>
+                <div className="relative">
+                  <h2 className="text-5xl font-black text-[#ff003c] font-display mb-2 tracking-tighter uppercase italic drop-shadow-[0_0_20px_#ff003c]">
+                    Link Severed
+                  </h2>
+                  <div className="absolute -bottom-2 left-0 w-full h-1 bg-[#ff003c]" />
                 </div>
+                <p className="text-neutral-500 text-[10px] mt-6 mb-10 tracking-[0.4em] uppercase">Data Corruption Detected</p>
+                <button 
+                  onClick={resetGame}
+                  className="flex items-center gap-3 bg-white text-black px-10 py-4 font-display font-black text-sm uppercase tracking-widest cyber-clip hover:bg-[#00f0ff] transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] active:scale-95"
+                >
+                  <RefreshCw size={18} />
+                  Re-Establish
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -48,8 +48,9 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="bg-black border-2 border-[#00ffff] p-6 shadow-[4px_4px_0px_#ff00ff] w-full max-w-md relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-[#ff00ff]/20 animate-pulse" />
+    <div className="bg-neutral-900/80 border border-[#00f0ff]/30 p-6 cyber-clip backdrop-blur-xl w-full max-w-md relative group">
+      {/* Decorative Corner */}
+      <div className="absolute top-0 right-0 w-12 h-12 border-t-2 border-r-2 border-[#ff003c] opacity-50" />
       
       <audio
         ref={audioRef}
@@ -58,69 +59,81 @@ export default function MusicPlayer() {
         onEnded={handleEnded}
       />
       
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="relative w-full aspect-video bg-neutral-900 border border-[#00ffff]/30 overflow-hidden">
+      <div className="flex items-center gap-6 mb-8">
+        <div className="relative w-24 h-24 shrink-0 cyber-clip-reverse overflow-hidden border border-white/10 group/cover">
           <img 
             src={currentTrack.cover} 
             alt={currentTrack.title} 
-            className="w-full h-full object-cover grayscale contrast-150 mix-blend-screen opacity-50"
+            className="w-full h-full object-cover grayscale group-hover/cover:grayscale-0 group-hover/cover:scale-110 transition-all duration-500"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="flex gap-2 items-end h-16">
-              {[...Array(8)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  animate={{ height: isPlaying ? [10, 40, 20, 60, 10] : 10 }}
-                  transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.05 }}
-                  className="w-2 bg-[#00ffff]"
-                />
-              ))}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover/cover:opacity-100 transition-opacity" />
+          {isPlaying && (
+            <div className="absolute inset-0 bg-[#00f0ff]/20 flex items-center justify-center">
+              <div className="flex gap-1 items-end h-10">
+                {[...Array(4)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{ height: [10, 30, 15, 35, 10] }}
+                    transition={{ repeat: Infinity, duration: 0.6, delay: i * 0.1 }}
+                    className="w-1.5 bg-[#00f0ff] shadow-[0_0_10px_#00f0ff]"
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-          <div className="absolute top-2 left-2 bg-black px-2 py-1 text-[10px] font-mono border border-[#ff00ff]">
-            LIVE_STREAM_0{currentTrack.id}
-          </div>
+          )}
         </div>
         
-        <div className="font-mono">
-          <h3 className="text-[#ff00ff] font-black truncate text-xl uppercase tracking-tighter glitch">{currentTrack.title}</h3>
-          <p className="text-[#00ffff]/70 text-xs truncate">SOURCE: {currentTrack.artist}</p>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-[#00f0ff] font-display font-bold truncate text-xl uppercase tracking-tighter drop-shadow-[0_0_8px_#00f0ff]">{currentTrack.title}</h3>
+          <p className="text-neutral-500 font-sans text-sm uppercase tracking-widest">{currentTrack.artist}</p>
+          
+          {/* Simulated Waveform */}
+          <div className="mt-3 flex items-center gap-0.5 h-4">
+            {[...Array(20)].map((_, i) => (
+              <motion.div
+                key={i}
+                animate={isPlaying ? { 
+                  height: [2, Math.random() * 12 + 4, 2],
+                  opacity: [0.3, 0.8, 0.3]
+                } : { height: 2, opacity: 0.2 }}
+                transition={{ repeat: Infinity, duration: 0.5 + Math.random(), delay: i * 0.05 }}
+                className="w-1 bg-[#00f0ff]/40"
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       <div className="space-y-6">
-        <div className="relative h-4 bg-neutral-900 border border-[#00ffff]/30">
+        <div className="relative h-1 bg-neutral-800">
           <motion.div 
-            className="absolute top-0 left-0 h-full bg-[#ff00ff]"
+            className="absolute top-0 left-0 h-full bg-[#ff003c] neon-pink"
             animate={{ width: `${progress}%` }}
             transition={{ type: "spring", bounce: 0, duration: 0.2 }}
           />
-          <div className="absolute inset-0 flex items-center justify-center text-[8px] font-mono text-white mix-blend-difference">
-            {Math.floor(progress)}%_BUFFERED
-          </div>
         </div>
 
-        <div className="flex items-center justify-between font-mono">
+        <div className="flex items-center justify-between">
           <button 
             onClick={skipBackward}
-            className="p-2 text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all border border-[#00ffff]/30"
+            className="p-3 text-neutral-500 hover:text-[#00f0ff] transition-colors"
           >
-            <SkipBack size={20} />
+            <SkipBack size={24} />
           </button>
           
           <button 
             onClick={togglePlay}
-            className="flex-1 mx-4 py-3 bg-[#00ffff] text-black font-black uppercase tracking-widest hover:bg-[#ff00ff] transition-all shadow-[4px_4px_0px_#ff00ff] active:translate-x-1 active:translate-y-1 active:shadow-none"
+            className="w-16 h-16 rounded-none bg-[#00f0ff] flex items-center justify-center text-black hover:bg-[#fcee0a] transition-all cyber-clip shadow-[0_0_20px_rgba(0,240,255,0.4)] active:scale-95"
           >
-            {isPlaying ? "STOP_CORE" : "INIT_AUDIO"}
+            {isPlaying ? <Pause size={32} fill="currentColor" /> : <Play size={32} fill="currentColor" className="ml-1" />}
           </button>
 
           <button 
             onClick={skipForward}
-            className="p-2 text-[#00ffff] hover:bg-[#00ffff] hover:text-black transition-all border border-[#00ffff]/30"
+            className="p-3 text-neutral-500 hover:text-[#00f0ff] transition-colors"
           >
-            <SkipForward size={20} />
+            <SkipForward size={24} />
           </button>
         </div>
       </div>
