@@ -1,0 +1,5 @@
+{
+  "name": "SYSTEM_OVERRIDE://SYNTH_STRIKE",
+  "description": "A cryptic, glitch-art inspired terminal interface combining a high-stakes snake module with an unstable audio driver.",
+  "requestFramePermissions": []
+}
